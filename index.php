@@ -211,13 +211,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             foreach ($columns as $col): 
                                 $seatId = $col . $row;
                                 $seat = $seatMap->seats[$seatId] ?? null;
-                                
+                                $seatType = $seat->type;
+                                if ($seat->isBooked) {
+                                    $seatType = ($seat->bookingType === 'group') ? 'group-booked' : 'booked';
+                                }
                                 if ($seat): ?>
                                     <div class="seat col-<?= strtolower($col) ?> 
                                         <?= $seat->isBooked ? 'booked' : '' ?> 
                                         seat-type-<?= $seat->type ?>"
                                         data-id="<?= $seat->id ?>"
-                                        data-type="<?= $seat->isBooked ? 'booked' : $seat->type ?>"
+                                        data-type="<?= $seatType ?>"
                                         data-booked="<?= $seat->isBooked ? 'true' : 'false' ?>">
                                         <?= $seat->id ?>
                                     </div>
@@ -251,7 +254,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background-color: #F92929;"></div>
-                        <span>Booked</span>
+                        <span>Solo Booked</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #A020F0;"></div>
+                        <span>Group Booked</span>
                     </div>
                 </div>
             </div>

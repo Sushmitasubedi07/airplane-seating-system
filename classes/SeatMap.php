@@ -47,6 +47,7 @@ class SeatMap {
                 if (isset($this->seats[$row['seat_id']])) {
                     $this->seats[$row['seat_id']]->isBooked = true;
                     $this->seats[$row['seat_id']]->passenger = $row['passenger_name'];
+                    $this->seats[$row['seat_id']]->bookingType = $row['booking_type'];
                 }
             }
         }
