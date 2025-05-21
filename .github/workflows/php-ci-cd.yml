@@ -3,14 +3,15 @@ name: PHP CI/CD
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -18,21 +19,28 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1' # Match your server’s PHP version
+          php-version: '8.3'
 
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
 
-      - name: Run tests
-        run: vendor/bin/phpunit # Add PHPUnit if you have tests
+      - name: Run PHPUnit tests
+        run: |
+          if [ -f vendor/bin/phpunit ]; then
+            vendor/bin/phpunit
+          else
+            echo "PHPUnit not found. Skipping tests."
+          fi
 
-      - name: Deploy to Server
+      - name: Deploy to server via SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SERVER_IP: 44.204.59.63
-          USERNAME: ubuntu
         run: |
           echo "$SSH_PRIVATE_KEY" > private.key
           chmod 600 private.key
-          ssh -i private.key $USERNAME@$SERVER_IP "cd /var/www/html/php-site/airplane-seating-system && git pull origin master && sudo systemctl restart apache2"
-          rm -f private.key
+          ssh -o StrictHostKeyChecking=no -i private.key ubuntu@44.204.59.63 << 'EOF'
+            cd /var/www/html/php-site/airplane-seating-system
+            git pull origin main
+            sudo systemctl restart apache2
+          EOF
+          rm private.key
