@@ -1,0 +1,38 @@
+name: PHP CI/CD
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1' # Match your server’s PHP version
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run tests
+        run: vendor/bin/phpunit # Add PHPUnit if you have tests
+
+      - name: Deploy to Server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: 44.204.59.63
+          USERNAME: ubuntu
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private.key
+          chmod 600 private.key
+          ssh -i private.key $USERNAME@$SERVER_IP "cd /var/www/html/php-site/airplane-seating-system && git pull origin master && sudo systemctl restart apache2"
+          rm -f private.key
